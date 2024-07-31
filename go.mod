@@ -1,3 +1,3 @@
-module github.com/devinjeon/kubectl-gpt
+module github.com/yekaifeng/kubectl-gpt
 
 go 1.19

@@ -11,13 +11,14 @@ import (
 	"sync"
 	"time"
 
-	gpt "github.com/devinjeon/kubectl-gpt/pkg/gpt"
+	gpt "github.com/yekaifeng/kubectl-gpt/pkg/gpt"
 )
 
 const (
 	DefaultMaxTokens   = 300
 	DefaultTemperature = 0.2
 	DefaultModel       = "gpt-3.5-turbo"
+	DefaultEndpoint    = "https://api.openai.com"
 	systemMessage      = "Translate the given text to a kubectl command. Show only generated kubectl command without any description, code block."
 )
 
@@ -44,7 +45,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	apiKey, model, temperature, maxTokens := getOpenAIConfigFromEnv()
+	apiEndpoint, apiKey, model, temperature, maxTokens := getOpenAIConfigFromEnv()
 	if apiKey == "" {
 		fmt.Println("Please set the environment variable: \"OPENAI_API_KEY\".")
 		fmt.Println("You can add the following line to your .zshrc or .bashrc file:")
@@ -67,7 +68,7 @@ func main() {
 	wg.Add(1)
 	go printLoadingMessage(&wg)
 
-	response, err := gpt.RequestChatGptAPI(request, apiKey)
+	response, err := gpt.RequestChatGptAPI(request, apiEndpoint, apiKey)
 
 	wg.Done()
 	fmt.Printf("\033[2K\r") // Clear loading message after completion
@@ -106,7 +107,12 @@ func main() {
 }
 
 // getEnvironmentVariables retrieves OpenAI related variables from environment
-func getOpenAIConfigFromEnv() (apiKey string, model string, temperature float64, maxTokens int) {
+func getOpenAIConfigFromEnv() (apiEndpoint string, apiKey string, model string, temperature float64, maxTokens int) {
+	apiEndpoint = os.Getenv("OPENAI_ENDPOINT")
+	if apiEndpoint == "" {
+		apiEndpoint = DefaultEndpoint
+	}
+
 	apiKey = os.Getenv("OPENAI_API_KEY")
 
 	model = os.Getenv("OPENAI_MODEL")
@@ -136,7 +142,7 @@ func getOpenAIConfigFromEnv() (apiKey string, model string, temperature float64,
 		}
 	}
 
-	return apiKey, model, temperature, maxTokens
+	return apiEndpoint, apiKey, model, temperature, maxTokens
 }
 
 func printLoadingMessage(wg *sync.WaitGroup) {
